@@ -4,18 +4,27 @@ import type { Bounty } from '../types';
 
 const WALRUS_AGGREGATOR = WALRUS_AGGREGATORS[0];
 
-async function suiRequest(method: string, params: any[]) {
-  const resp = await fetch(SUI_RPC_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': 't-6a199d1236e87595baf39056-f0739496094940579ae1954a',
-    },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-  });
-  const json = await resp.json();
-  if (json.error) throw new Error(json.error.message);
-  return json.result;
+async function suiRequest(method: string, params: any[], retries = 3): Promise<any> {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const resp = await fetch(SUI_RPC_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 't-6a199d1236e87595baf39056-f0739496094940579ae1954a',
+      },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    });
+    if (resp.status === 429) {
+      const wait = (attempt + 1) * 2000;
+      console.warn(`[Qually] Rate limited (429), retrying in ${wait}ms...`);
+      await new Promise(r => setTimeout(r, wait));
+      continue;
+    }
+    const json = await resp.json();
+    if (json.error) throw new Error(json.error.message);
+    return json.result;
+  }
+  throw new Error(`Failed after ${retries} retries`);
 }
 
 const BOUNTY_STATE_MAP: Record<number, Bounty['status']> = {
@@ -185,7 +194,12 @@ export function useOnChainBounties() {
           try {
             const obj = await suiRequest('sui_getObject', [id, { showContent: true }]);
             if (!obj?.data?.content?.fields) {
-              console.warn(`[Qually] Object ${id} has no content fields`, obj);
+              continue;
+            }
+            // Filter out stale bounties from old package deployments
+            const objType = obj.data?.type || obj.data?.content?.type || '';
+            if (!objType.includes(QUALLY_PACKAGE_ID)) {
+              console.warn(`[Qually] Skipping stale bounty ${id.slice(0, 12)} (old package)`);
               continue;
             }
             const bounty = await parseBountyObject(obj);
@@ -216,6 +230,13 @@ export function useOnChainBounty(id: string | null) {
           id,
           { showContent: true },
         ]);
+        if (!obj?.data?.content?.fields) return null;
+        // Filter out stale bounties from old package deployments
+        const objType = obj.data?.type || obj.data?.content?.type || '';
+        if (!objType.includes(QUALLY_PACKAGE_ID)) {
+          console.warn(`[Qually] Bounty ${id.slice(0, 12)} is from old package, skipping`);
+          return null;
+        }
         return await parseBountyObject(obj);
       } catch {
         return null;

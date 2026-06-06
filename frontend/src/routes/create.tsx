@@ -34,8 +34,8 @@ function CreateBountyPage() {
     description: "",
     bountyType: "0" as "0" | "1" | "2",
     prizeSui: "",
-    submissionValue: "7",
-    submissionUnit: "day" as "min" | "hr" | "day",
+    submissionValue: "5",
+    submissionUnit: "min" as "min" | "hr" | "day",
     judgingValue: "5",
     judgingUnit: "min" as "min" | "hr" | "day",
     category: "Development",
@@ -144,7 +144,17 @@ function CreateBountyPage() {
           }
         }
         queryClient.invalidateQueries({ queryKey: ["onChainBounties"] });
-        setTimeout(() => navigate({ to: "/post" }), 3000);
+        // Navigate to the bounty detail page if we have the ID
+        if (result.createdObjects?.length) {
+          const bountyId = result.createdObjects.find(id => id !== undefined);
+          if (bountyId) {
+            setTimeout(() => navigate({ to: "/bounty/$id", params: { id: bountyId } }), 2000);
+          } else {
+            setTimeout(() => navigate({ to: "/post" }), 3000);
+          }
+        } else {
+          setTimeout(() => navigate({ to: "/post" }), 3000);
+        }
       } else {
         setError(result.error || "Transaction failed");
       }

@@ -54,7 +54,14 @@ export function useContract() {
       setPending(false);
       if (result.effects?.status?.status === 'success') {
         const created = (result.effects?.created ?? []).map((c: any) => c.reference?.objectId).filter(Boolean);
-        return { success: true, digest: result.digest, createdObjects: created };
+        // Also extract bounty ID from objectChanges (has type info)
+        const bountyChange = (result.objectChanges ?? []).find((c: any) =>
+          c.type === 'created' && c.objectType?.includes('bounty::Bounty')
+        );
+        const bountyId = bountyChange?.objectId;
+        // Put bounty ID first if found
+        const ordered = bountyId ? [bountyId, ...created.filter((id: string) => id !== bountyId)] : created;
+        return { success: true, digest: result.digest, createdObjects: ordered };
       }
       return { success: false, error: result.effects?.status?.error ?? 'Transaction aborted' };
     } catch (e: any) {
