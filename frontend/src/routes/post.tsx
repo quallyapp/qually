@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useOnChainBounties } from "@/hooks/useOnChainBounties";
 import { useWallet } from "@/hooks/useWallet";
+import { stripHtml } from "@/lib/utils";
 
 export const Route = createFileRoute("/post")({
   head: () => ({
@@ -179,7 +180,7 @@ function PostDashboard() {
                       <span className="font-mono font-bold text-primary">{formatSui(b.prizePool)}</span>
                     </div>
                     <h3 className="font-semibold text-lg">{b.title}</h3>
-                    <p className="text-sm text-on-surface-variant mt-1 leading-relaxed">{b.description || "No description provided."}</p>
+                    <p className="text-sm text-on-surface-variant mt-1 leading-relaxed">{stripHtml(b.description || "No description provided.")}</p>
                     <div className="border-t border-border mt-4 pt-3 flex items-center justify-between">
                       <p className={`text-label-mono ${b.status === "review" ? "text-warning" : "text-on-surface-variant"}`}>
                         {b.submissionCount} Submission{b.submissionCount !== 1 ? "s" : ""} • {b.status === "review" ? "Review Period" : timeUntil(b.submissionDeadline)}

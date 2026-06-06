@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Clock, Landmark, Network, FileEdit, Box } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { stripHtml } from "@/lib/utils";
 import { useOnChainBounties } from "../hooks/useOnChainBounties";
 import { getNickname } from "../lib/user-profiles";
 import type { Bounty } from "../types";
@@ -246,7 +247,7 @@ function Explore() {
                   </div>
                 </div>
                 <h3 className="font-semibold text-lg leading-snug">{b.title}</h3>
-                <p className="text-sm text-on-surface-variant mt-2 leading-relaxed line-clamp-2">{b.description}</p>
+                <p className="text-sm text-on-surface-variant mt-2 leading-relaxed line-clamp-2">{stripHtml(b.description)}</p>
                 <div className="border-t border-border mt-5 pt-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="size-9 rounded-md bg-primary/10 border border-primary/20 grid place-items-center text-primary flex-shrink-0">{typeIcons[b.type]}</div>

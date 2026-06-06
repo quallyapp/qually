@@ -220,7 +220,7 @@ function BountyDetail() {
               </span>
             </div>
             <h1 className="text-display">{bounty.title}</h1>
-            <p className="mt-3 text-on-surface-variant max-w-2xl">{bounty.description || "No description available."}</p>
+            <p className="mt-3 text-on-surface-variant max-w-2xl" dangerouslySetInnerHTML={{ __html: bounty.description || "No description available." }} />
           </div>
           <aside className="rounded-lg border border-border bg-card p-5 self-start">
             <div className="flex items-center justify-between py-2">
@@ -311,7 +311,7 @@ function BountyDetail() {
                 </div>
                 <section>
                   <h2 className="text-headline-md mb-3">Project Overview</h2>
-                  <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">{bounty.description || "No description available."}</p>
+                  <div className="text-on-surface-variant leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: bounty.description || "No description available." }} />
                 </section>
               </>
             )}

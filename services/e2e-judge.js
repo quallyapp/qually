@@ -13,7 +13,7 @@ const { TransactionBlock } = require('@mysten/sui.js/transactions');
 const axios = require('axios');
 const crypto = require('crypto');
 
-const PACKAGE_ID = process.env.SUI_PACKAGE_ID || '0xc6a5bdf14674e542a3abdcf2895325e66d4eeaf3caa85563864ee72d76ae7c46';
+const PACKAGE_ID = process.env.SUI_PACKAGE_ID || '0xf6e68c034db7f460f6738a763fb5c4191151e1ab789428783781ca27caffa446';
 const TATUM_RPC = 'https://sui-testnet.gateway.tatum.io';
 const TATUM_KEY = process.env.TATUM_API_KEY;
 

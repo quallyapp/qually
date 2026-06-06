@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "../hooks/useWallet";
 import { useOnChainBounties } from "../hooks/useOnChainBounties";
 import { getApplicationsByJudge } from "../lib/judge-applications";
+import { stripHtml } from "@/lib/utils";
 
 export const Route = createFileRoute("/judging")({
   head: () => ({
@@ -125,7 +126,7 @@ function JudgingQueuePage() {
                       </div>
                       <h3 className="font-semibold text-lg truncate">{bounty.title || "Untitled Bounty"}</h3>
                       <p className="text-sm text-on-surface-variant mt-1 line-clamp-2">
-                        {bounty.description || "No description available."}
+                        {stripHtml(bounty.description || "No description available.")}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">

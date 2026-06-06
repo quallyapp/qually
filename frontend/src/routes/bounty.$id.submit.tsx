@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -310,12 +311,11 @@ function BountySubmit() {
             {/* Description */}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe your submission, approach, and key features…"
-                rows={6}
+              <RichTextEditor
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={setDescription}
+                placeholder="Describe your submission, approach, and key features..."
+                minHeight="160px"
               />
               <p className="text-xs text-on-surface-variant">
                 This will be uploaded to Walrus decentralized storage.

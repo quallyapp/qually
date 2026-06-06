@@ -32,8 +32,15 @@ export function useContract() {
     if (!account) return { success: false, error: 'Not connected' };
     setPending(true);
     try {
+      console.log("[Qually] Setting sender and signing...");
       tx.setSender(account.address);
-      const signed = await signTransaction({ transaction: tx, chain: 'sui:testnet' });
+      const signed = await Promise.race([
+        signTransaction({ transaction: tx, chain: 'sui:testnet' }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Signing timed out after 60s — check wallet extension')), 60000)
+        ),
+      ]);
+      console.log("[Qually] Signed! Executing via RPC...");
       const result: any = await Promise.race([
         suiClient.executeTransactionBlock({
           transactionBlock: signed.bytes,

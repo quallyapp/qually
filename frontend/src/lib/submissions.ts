@@ -75,6 +75,22 @@ export async function getSubmissions(): Promise<SubmissionRecord[]> {
   return enriched;
 }
 
-export function getSubmissionsForBounty(bountyId: string): SubmissionRecord[] {
-  return getLocalSubmissions().filter((s) => s.bountyId === bountyId);
+export async function getSubmissionsForBounty(bountyId: string): Promise<SubmissionRecord[]> {
+  const local = getLocalSubmissions().filter((s) => s.bountyId === bountyId);
+  if (local.length > 0) return local;
+
+  // If localStorage is empty (browser data cleared), try Walrus
+  const index = getWalrusIndex();
+  const allSubs: SubmissionRecord[] = [];
+
+  for (const [subId, blobId] of Object.entries(index)) {
+    try {
+      const remote = await readJsonFromWalrus<SubmissionRecord>(blobId);
+      if (remote && remote.bountyId === bountyId) {
+        allSubs.push({ ...remote, walrusBlobId: blobId });
+      }
+    } catch {}
+  }
+
+  return allSubs;
 }

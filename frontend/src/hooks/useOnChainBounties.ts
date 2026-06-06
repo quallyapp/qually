@@ -31,6 +31,10 @@ const BOUNTY_TYPE_MAP: Record<number, Bounty['type']> = {
   2: 'grant',
 };
 
+// Hardcoded fallback bounty IDs for testnet (survives browser clears)
+// Add new bounty IDs here after creating them
+const KNOWN_BOUNTY_IDS: string[] = [];
+
 function blobIdBytesToString(bytes: number[]): string {
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
@@ -100,12 +104,32 @@ export function useOnChainBounties() {
     queryKey: ['onChainBounties'],
     queryFn: async (): Promise<Bounty[]> => {
       try {
-        // 1. Try to load cached bounty IDs from localStorage
-        const cachedIds: string[] = JSON.parse(localStorage.getItem('qually_bounty_ids') || '[]');
+        let allIds = new Set<string>();
 
-        // 2. Try querying by type (works on some RPC providers)
-        let allIds = new Set(cachedIds);
+        // 0. Always include hardcoded known bounty IDs
+        for (const id of KNOWN_BOUNTY_IDS) allIds.add(id);
+
+        // 1. Load from Walrus bounty registry (persistent across browser clears)
         try {
+          const { getAllPosterBountyIds } = await import('../lib/bounty-registry');
+          const walrusIds = await getAllPosterBountyIds();
+          for (const id of walrusIds) allIds.add(id);
+        } catch {}
+
+        // 2. Load cached bounty IDs from localStorage (legacy)
+        try {
+          const cachedIds: string[] = JSON.parse(localStorage.getItem('qually_bounty_ids') || '[]');
+          for (const id of cachedIds) allIds.add(id);
+        } catch {}
+
+        // 3. Query owned Bounty objects from blockchain (for current connected wallet)
+        try {
+          const wallet = await import('../hooks/useWallet').then(m => {
+            // Access wallet state from the hook's store if available
+            return null;
+          }).catch(() => null);
+
+          // Also try querying the poster address from bounty objects
           const typePattern = `${QUALLY_PACKAGE_ID}::bounty::Bounty`;
           const objects = await suiRequest('sui_queryObjects', [
             {
@@ -119,10 +143,10 @@ export function useOnChainBounties() {
             if (obj.data?.objectId) allIds.add(obj.data.objectId);
           }
         } catch {
-          // Method not supported, rely on cached IDs
+          // Method not supported
         }
 
-        // 3. Also try event-based discovery (works if events were emitted)
+        // 4. Also try event-based discovery (works with BountyCreated events)
         try {
           const events = await suiRequest('sui_queryEvents', [
             { MoveModule: { package: QUALLY_PACKAGE_ID, module: 'bounty' } },
@@ -134,11 +158,11 @@ export function useOnChainBounties() {
             const parsed = event.parsedJson as any;
             if (parsed?.bounty_id) allIds.add(parsed.bounty_id);
           }
-        } catch {
-          // No events emitted
+        } catch (e) {
+          console.warn('[Qually] Event query failed:', e);
         }
 
-        // 4. Fetch each bounty object
+        // 5. Fetch each bounty object
         const bounties: Bounty[] = [];
         for (const id of allIds) {
           try {

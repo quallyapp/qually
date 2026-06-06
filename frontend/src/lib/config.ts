@@ -13,5 +13,5 @@ export const WALRUS_AGGREGATORS = [
   "https://walrus-testnet-aggregator.staketab.org",
 ];
 
-export const QUALLY_PACKAGE_ID = "0xc6a5bdf14674e542a3abdcf2895325e66d4eeaf3caa85563864ee72d76ae7c46";
-export const QUALLY_TREASURY = "0x177ca7cb6d6063c09036076b44ff19a3671a69da6d4272a30077f16896c5969e";
+export const QUALLY_PACKAGE_ID = "0xf6e68c034db7f460f6738a763fb5c4191151e1ab789428783781ca27caffa446";
+export const QUALLY_TREASURY = "0xc34f2126f18913ef87ea402f35168e66f831777f5c7ab483a37e2d6e86145339";

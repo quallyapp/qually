@@ -32,7 +32,7 @@ export function useDappKit(): DappKitState {
 }
 
 const networks = {
-  testnet: { url: SUI_RPC_URL, network: "testnet" as const },
+  testnet: { url: "https://fullnode.testnet.sui.io:443", network: "testnet" as const },
 };
 
 function DappKitBridge({ children }: { children: ReactNode }) {

@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { Badge } from "@/components/ui/badge";
 import { useOnChainBounty } from "@/hooks/useOnChainBounties";
 import { WALRUS_AGGREGATORS } from "@/lib/config";
+import { stripHtml } from "@/lib/utils";
 
 const WALRUS_AGGREGATOR = WALRUS_AGGREGATORS[0];
 
@@ -45,8 +46,9 @@ function SubmissionDetailPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    import("@/lib/submissions").then(({ getSubmissionsForBounty }) => {
-      const found = getSubmissionsForBounty(bountyId)[0] ?? null;
+    import("@/lib/submissions").then(async ({ getSubmissionsForBounty }) => {
+      const subs = await getSubmissionsForBounty(bountyId);
+      const found = subs[0] ?? null;
       setSubmission(found as any ?? null);
 
       if (found?.blobId) {
@@ -145,7 +147,7 @@ function SubmissionDetailPage() {
             <h2 className="font-semibold text-lg">{bounty.title}</h2>
             {bounty.description && (
               <p className="text-sm text-on-surface-variant mt-1 line-clamp-2">
-                {bounty.description}
+                {stripHtml(bounty.description)}
               </p>
             )}
             <Link
@@ -182,9 +184,10 @@ function SubmissionDetailPage() {
             {(walrusContent?.description || submission.description) && (
               <div>
                 <h3 className="text-label-caps text-on-surface-variant mb-2">DESCRIPTION</h3>
-                <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {walrusContent?.description || submission.description}
-                </div>
+                <div
+                  className="text-sm text-foreground prose prose-sm max-w-none leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: walrusContent?.description || submission.description }}
+                />
               </div>
             )}
 
@@ -192,9 +195,10 @@ function SubmissionDetailPage() {
             {walrusContent?.requirements && walrusContent.requirements !== walrusContent.description && (
               <div>
                 <h3 className="text-label-caps text-on-surface-variant mb-2">REQUIREMENTS</h3>
-                <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {walrusContent.requirements}
-                </div>
+                <div
+                  className="text-sm text-foreground prose prose-sm max-w-none leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: walrusContent.requirements }}
+                />
               </div>
             )}
 

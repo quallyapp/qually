@@ -7,6 +7,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { useWallet } from "@/hooks/useWallet";
 import { useContract } from "@/hooks/useContract";
 import { uploadJson } from "@/lib/walrus";
+import { addBountyToRegistry } from "@/lib/bounty-registry";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import type { CreateBountyParams } from "@/lib/types";
 
 export const Route = createFileRoute("/create")({
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/create")({
 });
 
 function CreateBountyPage() {
-  const { connected } = useWallet();
+  const { connected, address } = useWallet();
   const { createBounty, pending } = useContract();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -32,7 +34,8 @@ function CreateBountyPage() {
     description: "",
     bountyType: "0" as "0" | "1" | "2",
     prizeSui: "",
-    submissionDays: "7",
+    submissionValue: "7",
+    submissionUnit: "day" as "min" | "hr" | "day",
     judgingValue: "5",
     judgingUnit: "min" as "min" | "hr" | "day",
     category: "Development",
@@ -64,8 +67,17 @@ function CreateBountyPage() {
     }
 
     const now = Date.now();
-    const submissionMs = parseInt(form.submissionDays) * 24 * 60 * 60 * 1000;
     
+    let submissionMs: number;
+    const submissionNum = parseInt(form.submissionValue);
+    if (form.submissionUnit === "min") {
+      submissionMs = submissionNum * 60 * 1000;
+    } else if (form.submissionUnit === "hr") {
+      submissionMs = submissionNum * 60 * 60 * 1000;
+    } else {
+      submissionMs = submissionNum * 24 * 60 * 60 * 1000;
+    }
+
     let judgingMs: number;
     if (form.judgingUnit === "min") {
       judgingMs = judgingNum * 60 * 1000;
@@ -123,6 +135,13 @@ function CreateBountyPage() {
             if (!cached.includes(objId)) cached.push(objId);
           }
           localStorage.setItem('qually_bounty_ids', JSON.stringify(cached));
+
+          // Register bounty on Walrus for persistence
+          for (const objId of result.createdObjects) {
+            addBountyToRegistry(objId, address!).catch((e) =>
+              console.warn("[Qually] Failed to register bounty on Walrus:", e)
+            );
+          }
         }
         queryClient.invalidateQueries({ queryKey: ["onChainBounties"] });
         setTimeout(() => navigate({ to: "/post" }), 3000);
@@ -232,13 +251,11 @@ function CreateBountyPage() {
           {/* Description */}
           <div>
             <label className="text-label-caps text-on-surface-variant block mb-2">Description / Brief</label>
-            <textarea
+            <RichTextEditor
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(html) => setForm({ ...form, description: html })}
               placeholder="Describe the bounty requirements, deliverables, and acceptance criteria..."
-              rows={6}
-              className="w-full px-4 py-3 rounded-md border border-border bg-card text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
-              required
+              minHeight="200px"
             />
           </div>
 
@@ -265,15 +282,24 @@ function CreateBountyPage() {
             </div>
             <div>
               <label className="text-label-caps text-on-surface-variant block mb-2">Submission Window</label>
-              <select
-                value={form.submissionDays}
-                onChange={(e) => setForm({ ...form, submissionDays: e.target.value })}
-                className="w-full h-11 px-4 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
-              >
-                {[3, 5, 7, 14, 30].map((d) => (
-                  <option key={d} value={d}>{d} days</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={form.submissionValue}
+                  onChange={(e) => setForm({ ...form, submissionValue: e.target.value })}
+                  className="flex-1 h-11 px-4 rounded-md border border-border bg-card text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary/50"
+                />
+                <select
+                  value={form.submissionUnit}
+                  onChange={(e) => setForm({ ...form, submissionUnit: e.target.value as "min" | "hr" | "day" })}
+                  className="h-11 px-3 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                >
+                  <option value="min">min</option>
+                  <option value="hr">hr</option>
+                  <option value="day">day</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="text-label-caps text-on-surface-variant block mb-2">Judging Window</label>

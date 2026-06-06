@@ -7,6 +7,7 @@ import { useOnChainBounties } from "@/hooks/useOnChainBounties";
 import { useWallet } from "@/hooks/useWallet";
 import { useContract } from "@/hooks/useContract";
 import { uploadText } from "@/lib/walrus";
+import { stripHtml } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -354,7 +355,7 @@ function ProfilePage() {
                           <span className="font-mono font-bold text-primary">{formatSui(b.prizePool)}</span>
                         </div>
                         <h3 className="font-semibold text-lg">{b.title}</h3>
-                        <p className="text-sm text-on-surface-variant mt-1 leading-relaxed">{b.description || "No description provided."}</p>
+                        <p className="text-sm text-on-surface-variant mt-1 leading-relaxed">{stripHtml(b.description || "No description provided.")}</p>
                         <div className="border-t border-border mt-4 pt-3 flex items-center justify-between">
                           <p className={`text-label-mono ${b.status === "review" ? "text-warning" : "text-on-surface-variant"}`}>
                             {b.submissionCount} Submission{b.submissionCount !== 1 ? "s" : ""} • {b.status === "review" ? "Review Period" : b.status === "closed" ? "Closed" : timeUntil(b.submissionDeadline)}

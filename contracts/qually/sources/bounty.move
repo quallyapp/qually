@@ -2,6 +2,7 @@ module qually::bounty {
     use sui::balance::{Self, Balance};
     use sui::sui::SUI;
     use sui::coin::{Self, Coin};
+    use sui::event;
     use std::string::String;
 
     /// Error codes
@@ -19,6 +20,18 @@ module qually::bounty {
     const E_VETO_WINDOW_CLOSED: u64 = 11;
     const E_AUTO_EXTEND_NOT_CONFIGURED: u64 = 12;
     const E_MIN_SUBMISSIONS_NOT_MET: u64 = 13;
+
+    /// Event emitted when a bounty is created
+    public struct BountyCreated has copy, drop {
+        bounty_id: ID,
+        poster: address,
+        bounty_type: u8,
+        prize_pool: u64,
+        brief_blob_id: vector<u8>,
+        submission_deadline: u64,
+        judging_deadline: u64,
+        category_tags: vector<String>,
+    }
 
     /// Bounty types
     #[allow(unused_const)]
@@ -95,6 +108,7 @@ module qually::bounty {
 
         let poster = ctx.sender();
         let prize_pool = payment.into_balance();
+        let pool_value = balance::value(&prize_pool);
 
         let bounty = Bounty {
             id: object::new(ctx),
@@ -122,7 +136,20 @@ module qually::bounty {
             submitted_addresses: vector[],
         };
 
+        let bounty_id = object::uid_to_inner(&bounty.id);
+
         transfer::share_object(bounty);
+
+        event::emit(BountyCreated {
+            bounty_id,
+            poster,
+            bounty_type,
+            prize_pool: pool_value,
+            brief_blob_id,
+            submission_deadline,
+            judging_deadline,
+            category_tags,
+        });
     }
 
     /// Poster approves a judge for this bounty
