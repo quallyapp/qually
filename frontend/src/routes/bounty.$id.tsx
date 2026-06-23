@@ -10,6 +10,7 @@ import { JudgeActions } from "../components/bounty/JudgeActions";
 import { getApplicationsForBounty, getJudgeDetailsForApplication, type JudgeApplication } from "../lib/judge-applications";
 import type { JudgeProfileDetails } from "../lib/judge-profiles";
 import { getNickname } from "../lib/user-profiles";
+import { sanitizeHtml } from "../lib/utils";
 
 export const Route = createFileRoute("/bounty/$id")({
   head: () => ({
@@ -220,7 +221,7 @@ function BountyDetail() {
               </span>
             </div>
             <h1 className="text-display">{bounty.title}</h1>
-            <p className="mt-3 text-on-surface-variant max-w-2xl" dangerouslySetInnerHTML={{ __html: bounty.description || "No description available." }} />
+            <p className="mt-3 text-on-surface-variant max-w-2xl" dangerouslySetInnerHTML={{ __html: sanitizeHtml(bounty.description) || "No description available." }} />
           </div>
           <aside className="rounded-lg border border-border bg-card p-5 self-start">
             <div className="flex items-center justify-between py-2">
@@ -264,7 +265,7 @@ function BountyDetail() {
               </div>
             </div>
             <div className="border-t border-border pt-3 space-y-2 text-sm">
-              {[["Reputation", `${bounty.posterReputation}%`], ["Payout Rate", "100%"], ["Bounties Run", "14"]].map(([k, v]) => (
+              {[["Reputation", `${bounty.posterReputation}%`]].map(([k, v]) => (
                 <div key={k} className="flex justify-between">
                   <span className="text-on-surface-variant">{k}</span>
                   <span className="font-mono font-semibold">{v}</span>
@@ -311,7 +312,7 @@ function BountyDetail() {
                 </div>
                 <section>
                   <h2 className="text-headline-md mb-3">Project Overview</h2>
-                  <div className="text-on-surface-variant leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: bounty.description || "No description available." }} />
+                  <div className="text-on-surface-variant leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(bounty.description) || "No description available." }} />
                 </section>
               </>
             )}

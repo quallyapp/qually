@@ -49,7 +49,6 @@ export async function addBountyToRegistry(bountyId: string, posterAddress: strin
     const result = await uploadJson(existing as unknown as Record<string, unknown>);
     localIndex[key] = result.blobId;
     saveLocalIndex(localIndex);
-    console.log(`[Qually] Bounty registry updated on Walrus: ${result.blobId.slice(0, 16)}...`);
   } catch (e) {
     console.warn("[Qually] Failed to upload bounty registry to Walrus:", e);
   }

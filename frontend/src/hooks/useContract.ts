@@ -8,7 +8,7 @@ import {
   buildSubmitWorkTx, buildMintJudgeProfileTx, buildApplyAsJudgeTx,
   buildApproveJudgeTx, buildReleaseStakeTx, buildCommitVoteTx,
   buildRevealVoteTx, buildFinalizeFixedTx, buildFinalizeContestTx,
-  buildFinalizeGradedTx, buildReleaseMilestoneTx, buildUpdateJudgeReputationTx,
+  buildReleaseMilestoneTx, buildUpdateJudgeReputationTx,
   buildSlashJudgeForMissedRevealTx, buildCreateMilestoneTx,
   buildSubmitMilestoneTx, buildApproveMilestoneTx, buildRejectMilestoneTx,
   buildEscalateOverdueTx, buildOpenDisputeTx, buildSubmitEvidenceTx,
@@ -32,7 +32,6 @@ export function useContract() {
     if (!account) return { success: false, error: 'Not connected' };
     setPending(true);
     try {
-      console.log("[Qually] Setting sender and signing...");
       tx.setSender(account.address);
       const signed = await Promise.race([
         signTransaction({ transaction: tx, chain: 'sui:testnet' }),
@@ -40,7 +39,6 @@ export function useContract() {
           setTimeout(() => reject(new Error('Signing timed out after 60s — check wallet extension')), 60000)
         ),
       ]);
-      console.log("[Qually] Signed! Executing via RPC...");
       const result: any = await Promise.race([
         suiClient.executeTransactionBlock({
           transactionBlock: signed.bytes,
@@ -66,7 +64,6 @@ export function useContract() {
       return { success: false, error: result.effects?.status?.error ?? 'Transaction aborted' };
     } catch (e: any) {
       setPending(false);
-      console.error("[Qually] executeTx exception:", e);
       return { success: false, error: e.message };
     }
   }, [account, signTransaction, suiClient]);
@@ -93,7 +90,7 @@ export function useContract() {
   const mintJudgeProfile = useCallback(() => executeTx(buildMintJudgeProfileTx()), [executeTx]);
   const applyAsJudge = useCallback((profileId: string, bountyId: string, stake: number, blobId: number[]) =>
     executeTx(buildApplyAsJudgeTx(profileId, bountyId, stake, blobId)), [executeTx]);
-  const approveJudge = useCallback((appId: string) => executeTx(buildApproveJudgeTx(appId)), [executeTx]);
+  const approveJudge = useCallback((appId: string, bountyId: string) => executeTx(buildApproveJudgeTx(appId, bountyId)), [executeTx]);
   const releaseStake = useCallback((profileId: string, amt: number) => executeTx(buildReleaseStakeTx(profileId, amt)), [executeTx]);
 
   // ═══ Voting ═══
@@ -105,7 +102,6 @@ export function useContract() {
   // ═══ Payout ═══
   const finalizeFixed = useCallback((id: string, winner: string) => executeTx(buildFinalizeFixedTx(id, winner)), [executeTx]);
   const finalizeContest = useCallback((id: string, winners: string[]) => executeTx(buildFinalizeContestTx(id, winners)), [executeTx]);
-  const finalizeGraded = useCallback((id: string) => executeTx(buildFinalizeGradedTx(id)), [executeTx]);
   const releaseMilestone = useCallback((bountyId: string, hunter: string, amt: number) =>
     executeTx(buildReleaseMilestoneTx(bountyId, hunter, amt)), [executeTx]);
   const updateJudgeReputation = useCallback((profileId: string) => executeTx(buildUpdateJudgeReputationTx(profileId)), [executeTx]);
@@ -115,7 +111,7 @@ export function useContract() {
   const createMilestone = useCallback((bountyId: string, hunter: string, idx: number, descBlobId: number[], deadline: number, amt: number) =>
     executeTx(buildCreateMilestoneTx(bountyId, hunter, idx, descBlobId, deadline, amt)), [executeTx]);
   const submitMilestone = useCallback((id: string, blobId: number[]) => executeTx(buildSubmitMilestoneTx(id, blobId)), [executeTx]);
-  const approveMilestone = useCallback((id: string) => executeTx(buildApproveMilestoneTx(id)), [executeTx]);
+  const approveMilestone = useCallback((id: string, bountyId: string) => executeTx(buildApproveMilestoneTx(id, bountyId)), [executeTx]);
   const rejectMilestone = useCallback((id: string) => executeTx(buildRejectMilestoneTx(id)), [executeTx]);
   const escalateOverdue = useCallback((id: string) => executeTx(buildEscalateOverdueTx(id)), [executeTx]);
 
@@ -123,7 +119,7 @@ export function useContract() {
   const openDispute = useCallback((bountyId: string, subId: string, reasonBlobId: number[], fee: number) =>
     executeTx(buildOpenDisputeTx(bountyId, subId, reasonBlobId, fee)), [executeTx]);
   const submitEvidence = useCallback((disputeId: string, blobId: number[]) => executeTx(buildSubmitEvidenceTx(disputeId, blobId)), [executeTx]);
-  const assignArbiter = useCallback((disputeId: string, arbiter: string) => executeTx(buildAssignArbiterTx(disputeId, arbiter)), [executeTx]);
+  const assignArbiter = useCallback((disputeId: string, bountyId: string, arbiter: string) => executeTx(buildAssignArbiterTx(disputeId, bountyId, arbiter)), [executeTx]);
   const resolveDispute = useCallback((disputeId: string, bountyId: string, outcome: number) =>
     executeTx(buildResolveDisputeTx(disputeId, bountyId, outcome)), [executeTx]);
   const rejectDispute = useCallback((id: string) => executeTx(buildRejectDisputeTx(id)), [executeTx]);
@@ -152,7 +148,7 @@ export function useContract() {
     // Voting
     commitVote, revealVote,
     // Payout
-    finalizeFixed, finalizeContest, finalizeGraded, releaseMilestone,
+    finalizeFixed, finalizeContest, releaseMilestone,
     updateJudgeReputation, slashJudge,
     // Milestone
     createMilestone, submitMilestone, approveMilestone, rejectMilestone, escalateOverdue,

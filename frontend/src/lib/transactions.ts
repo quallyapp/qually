@@ -189,11 +189,11 @@ export function buildApplyAsJudgeTx(
   return tx;
 }
 
-export function buildApproveJudgeTx(judgeApplicationId: string): Transaction {
+export function buildApproveJudgeTx(judgeApplicationId: string, bountyId: string): Transaction {
   const tx = new Transaction();
   tx.moveCall({
     target: `${QUALLY_PACKAGE_ID}::judge::approve_judge`,
-    arguments: [tx.object(judgeApplicationId)],
+    arguments: [tx.object(judgeApplicationId), tx.object(bountyId)],
   });
   return tx;
 }
@@ -265,15 +265,6 @@ export function buildFinalizeContestTx(bountyId: string, winners: string[]): Tra
   return tx;
 }
 
-export function buildFinalizeGradedTx(bountyId: string): Transaction {
-  const tx = new Transaction();
-  tx.moveCall({
-    target: `${QUALLY_PACKAGE_ID}::payout::finalize_graded`,
-    arguments: [tx.object(bountyId), tx.object(TREASURY_OBJECT_ID)],
-  });
-  return tx;
-}
-
 export function buildReleaseMilestoneTx(bountyId: string, hunter: string, amountMist: number): Transaction {
   const tx = new Transaction();
   tx.moveCall({
@@ -337,11 +328,11 @@ export function buildSubmitMilestoneTx(milestoneId: string, deliveryBlobId: numb
   return tx;
 }
 
-export function buildApproveMilestoneTx(milestoneId: string): Transaction {
+export function buildApproveMilestoneTx(milestoneId: string, bountyId: string): Transaction {
   const tx = new Transaction();
   tx.moveCall({
     target: `${QUALLY_PACKAGE_ID}::milestone::approve_milestone`,
-    arguments: [tx.object(milestoneId), tx.object(SUI_CLOCK)],
+    arguments: [tx.object(milestoneId), tx.object(bountyId), tx.object(SUI_CLOCK)],
   });
   return tx;
 }
@@ -375,14 +366,13 @@ export function buildOpenDisputeTx(
   disputeFeeMist: number,
 ): Transaction {
   const tx = new Transaction();
-  const [feeCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(disputeFeeMist)]);
   tx.moveCall({
     target: `${QUALLY_PACKAGE_ID}::dispute::open_dispute`,
     arguments: [
       tx.pure.id(bountyId),
       tx.pure.id(submissionId),
       tx.pure.vector('u8', reasonBlobId),
-      feeCoin,
+      tx.pure.u64(disputeFeeMist),
     ],
   });
   return tx;
@@ -397,11 +387,11 @@ export function buildSubmitEvidenceTx(disputeId: string, evidenceBlobId: number[
   return tx;
 }
 
-export function buildAssignArbiterTx(disputeId: string, arbiter: string): Transaction {
+export function buildAssignArbiterTx(disputeId: string, bountyId: string, arbiter: string): Transaction {
   const tx = new Transaction();
   tx.moveCall({
     target: `${QUALLY_PACKAGE_ID}::dispute::assign_arbiter`,
-    arguments: [tx.object(disputeId), tx.pure.address(arbiter)],
+    arguments: [tx.object(disputeId), tx.object(bountyId), tx.pure.address(arbiter)],
   });
   return tx;
 }

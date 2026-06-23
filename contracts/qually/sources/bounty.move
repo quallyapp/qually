@@ -13,10 +13,8 @@ module qually::bounty {
     const E_INVALID_BOUNTY_TYPE: u64 = 4;
     const E_INVALID_SPLITS: u64 = 5;
     const E_JUDGE_NOT_APPROVED: u64 = 6;
-    const E_NO_WINNERS: u64 = 7;
     const E_HAS_SUBMISSIONS: u64 = 8;
     const E_NOT_ALLOWED: u64 = 9;
-    const E_ALREADY_SUBMITTED: u64 = 10;
     const E_VETO_WINDOW_CLOSED: u64 = 11;
     const E_AUTO_EXTEND_NOT_CONFIGURED: u64 = 12;
     const E_MIN_SUBMISSIONS_NOT_MET: u64 = 13;
@@ -277,7 +275,7 @@ module qually::bounty {
     public fun boost_prize_pool(
         bounty: &mut Bounty,
         payment: Coin<SUI>,
-        ctx: &mut TxContext
+        _ctx: &mut TxContext
     ) {
         assert!(bounty.state == STATE_OPEN, E_INVALID_STATE);
 

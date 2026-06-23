@@ -239,7 +239,7 @@ async function run() {
   const txApprove = new TransactionBlock();
   txApprove.moveCall({
     target: `${PACKAGE_ID}::judge::approve_judge`,
-    arguments: [txApprove.object(applicationId)],
+    arguments: [txApprove.object(applicationId), txApprove.object(bountyId)],
   });
 
   const approveResult = await withRetry(() =>

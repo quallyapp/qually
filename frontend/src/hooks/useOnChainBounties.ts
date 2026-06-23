@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { QUALLY_PACKAGE_ID, QUALLY_BOUNTY_REGISTRY, SUI_RPC_URL, WALRUS_AGGREGATORS } from '../lib/config';
+import { QUALLY_PACKAGE_ID, QUALLY_BOUNTY_REGISTRY, SUI_RPC_URL, WALRUS_AGGREGATORS, TATUM_API_KEY } from '../lib/config';
 import type { Bounty } from '../types';
 
 const WALRUS_AGGREGATOR = WALRUS_AGGREGATORS[0];
@@ -10,7 +10,7 @@ async function suiRequest(method: string, params: any[], retries = 3): Promise<a
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': 't-6a199d1236e87595baf39056-f0739496094940579ae1954a',
+        'x-api-key': TATUM_API_KEY,
       },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
     });
@@ -130,7 +130,6 @@ export function useOnChainBounties() {
               if (typeof id === 'string') allIds.add(id);
             }
           }
-          console.log(`[Qually] On-chain BountyRegistry: ${bountyIds?.length ?? 0} bounty IDs`);
         } catch (e) {
           console.warn('[Qually] Failed to read on-chain BountyRegistry:', e);
         }
@@ -209,7 +208,6 @@ export function useOnChainBounties() {
           }
         }
 
-        console.log(`[Qually] Found ${bounties.length} bounties from ${allIds.size} IDs`, bounties.map(b => b.id.slice(0, 8)));
         return bounties.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       } catch {
         return [];

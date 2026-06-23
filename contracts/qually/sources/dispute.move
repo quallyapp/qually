@@ -7,8 +7,6 @@ module qually::dispute {
     /// Error codes
     const E_UNAUTHORIZED: u64 = 0;
     const E_INVALID_STATE: u64 = 1;
-    const E_DEADLINE_NOT_REACHED: u64 = 2;
-    const E_ALREADY_DISPUTED: u64 = 3;
 
     /// Dispute states
     const STATE_OPEN: u8 = 0;
@@ -20,7 +18,6 @@ module qually::dispute {
     const OUTCOME_NONE: u8 = 0;
     const OUTCOME_HUNTER_WINS: u8 = 1;
     const OUTCOME_POSTER_WINS: u8 = 2;
-    const OUTCOME_SPLIT: u8 = 3;
 
     /// Dispute object
     public struct Dispute has key, store {
@@ -77,11 +74,12 @@ module qually::dispute {
     /// Assign arbiter to dispute
     public fun assign_arbiter(
         dispute: &mut Dispute,
+        bounty: &Bounty,
         arbiter: address,
         ctx: &mut TxContext
     ) {
+        assert!(ctx.sender() == bounty::poster(bounty), E_UNAUTHORIZED);
         assert!(dispute.state == STATE_OPEN, E_INVALID_STATE);
-        // Note: In production, verify caller is authorized (DAO or trusted arbiter)
 
         dispute.arbiter = arbiter;
         dispute.state = STATE_REVIEW;

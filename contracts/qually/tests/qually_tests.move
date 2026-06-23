@@ -83,18 +83,31 @@ module qually::qually_tests {
     #[test]
     fun test_judge_apply_and_approve() {
         let mut scenario = ts::begin(ADDR1);
+        let mut registry = qually::bounty::create_registry_for_testing(ts::ctx(&mut scenario));
 
-        // 1. Mint judge profile
+        // 1. Mint judge profile (ADDR1)
         {
             judge::mint_judge_profile(ts::ctx(&mut scenario));
         };
 
-        // 2. Apply as judge with stake
+        // 2. ADDR2 creates bounty (ADDR2 is poster)
+        ts::next_tx(&mut scenario, ADDR2);
+        {
+            let payment = coin::mint_for_testing<SUI>(1000, ts::ctx(&mut scenario));
+            bounty::create_bounty(
+                &mut registry,
+                payment, 0, b"b", b"h", 1000, 2000, 50, 3, vector[], false, false, vector[],
+                ts::ctx(&mut scenario)
+            );
+        };
+
+        // 3. ADDR1 applies as judge with stake
         ts::next_tx(&mut scenario, ADDR1);
         {
             let mut profile = ts::take_from_sender<JudgeProfile>(&scenario);
-            let bounty_id = object::id_from_address(@0x123);
-            let stake = coin::mint_for_testing<SUI>(100_000_000, ts::ctx(&mut scenario)); // 0.1 SUI
+            let bounty = ts::take_shared<Bounty>(&scenario);
+            let bounty_id = bounty::id(&bounty);
+            let stake = coin::mint_for_testing<SUI>(100_000_000, ts::ctx(&mut scenario));
 
             judge::apply_as_judge(
                 &mut profile,
@@ -105,9 +118,10 @@ module qually::qually_tests {
             );
 
             ts::return_to_sender(&scenario, profile);
+            ts::return_shared(bounty);
         };
 
-        // 3. Verify application created
+        // 4. Verify application created
         ts::next_tx(&mut scenario, ADDR1);
         {
             let application = ts::take_shared<judge::JudgeApplication>(&scenario);
@@ -116,15 +130,18 @@ module qually::qually_tests {
             ts::return_shared(application);
         };
 
-        // 4. Approve judge
+        // 5. ADDR2 (poster) approves judge
         ts::next_tx(&mut scenario, ADDR2);
         {
             let mut application = ts::take_shared<judge::JudgeApplication>(&scenario);
-            judge::approve_judge(&mut application, ts::ctx(&mut scenario));
+            let bounty = ts::take_shared<Bounty>(&scenario);
+            judge::approve_judge(&mut application, &bounty, ts::ctx(&mut scenario));
             assert!(judge::application_state(&application) == 1, 2); // Approved
             ts::return_shared(application);
+            ts::return_shared(bounty);
         };
 
+        qually::bounty::destroy_registry_for_testing(registry);
         ts::end(scenario);
     }
 
@@ -831,9 +848,11 @@ module qually::qually_tests {
         ts::next_tx(&mut scenario, ADDR1);
         {
             let mut dispute = ts::take_shared<Dispute>(&scenario);
-            qually::dispute::assign_arbiter(&mut dispute, ADDR3, ts::ctx(&mut scenario));
+            let bounty = ts::take_shared<Bounty>(&scenario);
+            qually::dispute::assign_arbiter(&mut dispute, &bounty, ADDR3, ts::ctx(&mut scenario));
             assert!(qually::dispute::state(&dispute) == 1, 0); // Under review
             ts::return_shared(dispute);
+            ts::return_shared(bounty);
         };
 
         // Resolve dispute — hunter wins
@@ -860,11 +879,27 @@ module qually::qually_tests {
     #[test]
     fun test_dispute_reject() {
         let mut scenario = ts::begin(ADDR1);
+        let mut registry = qually::bounty::create_registry_for_testing(ts::ctx(&mut scenario));
+
+        // Create bounty (ADDR1 is poster)
+        {
+            let payment = coin::mint_for_testing<SUI>(1000, ts::ctx(&mut scenario));
+            bounty::create_bounty(
+                &mut registry,
+                payment, 0, b"b", b"h", 1000, 2000, 50, 3, vector[], false, false, vector[],
+                ts::ctx(&mut scenario)
+            );
+        };
 
         // Open dispute
+        ts::next_tx(&mut scenario, ADDR1);
         {
+            let bounty = ts::take_shared<Bounty>(&scenario);
+            let bounty_id = bounty::id(&bounty);
+            ts::return_shared(bounty);
+
             qually::dispute::open_dispute(
-                object::id_from_address(@0x1),
+                bounty_id,
                 object::id_from_address(@0x2),
                 b"reason",
                 100_000_000,
@@ -872,12 +907,14 @@ module qually::qually_tests {
             );
         };
 
-        // Assign arbiter
+        // Assign arbiter (ADDR1 is poster)
         ts::next_tx(&mut scenario, ADDR1);
         {
             let mut dispute = ts::take_shared<Dispute>(&scenario);
-            qually::dispute::assign_arbiter(&mut dispute, ADDR3, ts::ctx(&mut scenario));
+            let bounty = ts::take_shared<Bounty>(&scenario);
+            qually::dispute::assign_arbiter(&mut dispute, &bounty, ADDR3, ts::ctx(&mut scenario));
             ts::return_shared(dispute);
+            ts::return_shared(bounty);
         };
 
         // Reject dispute
@@ -889,6 +926,7 @@ module qually::qually_tests {
             ts::return_shared(dispute);
         };
 
+        qually::bounty::destroy_registry_for_testing(registry);
         ts::end(scenario);
     }
 
@@ -897,11 +935,26 @@ module qually::qually_tests {
     #[test]
     fun test_milestone_lifecycle() {
         let mut scenario = ts::begin(ADDR1);
+        let mut registry = qually::bounty::create_registry_for_testing(ts::ctx(&mut scenario));
         let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
 
-        // Create milestone
+        // Create bounty (ADDR1 is poster)
         {
-            let bounty_id = object::id_from_address(@0x1);
+            let payment = coin::mint_for_testing<SUI>(1000, ts::ctx(&mut scenario));
+            bounty::create_bounty(
+                &mut registry,
+                payment, 0, b"b", b"h", 1000, 2000, 50, 3, vector[], false, false, vector[],
+                ts::ctx(&mut scenario)
+            );
+        };
+
+        // Create milestone
+        ts::next_tx(&mut scenario, ADDR1);
+        {
+            let bounty = ts::take_shared<Bounty>(&scenario);
+            let bounty_id = bounty::id(&bounty);
+            ts::return_shared(bounty);
+
             milestone::create_milestone(
                 bounty_id,
                 ADDR1,
@@ -923,17 +976,20 @@ module qually::qually_tests {
             ts::return_shared(ms);
         };
 
-        // Approve milestone
-        ts::next_tx(&mut scenario, ADDR2);
+        // Approve milestone (ADDR1 is poster)
+        ts::next_tx(&mut scenario, ADDR1);
         {
             let mut ms = ts::take_shared<Milestone>(&scenario);
+            let bounty = ts::take_shared<Bounty>(&scenario);
             clock.set_for_testing(2000);
-            milestone::approve_milestone(&mut ms, &clock, ts::ctx(&mut scenario));
+            milestone::approve_milestone(&mut ms, &bounty, &clock, ts::ctx(&mut scenario));
             assert!(milestone::state(&ms) == 2, 1); // Approved
             ts::return_shared(ms);
+            ts::return_shared(bounty);
         };
 
         clock::destroy_for_testing(clock);
+        qually::bounty::destroy_registry_for_testing(registry);
         ts::end(scenario);
     }
 

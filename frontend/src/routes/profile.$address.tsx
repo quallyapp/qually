@@ -75,6 +75,7 @@ function ProfilePage() {
   const [editX, setEditX] = useState("");
   const [editGithub, setEditGithub] = useState("");
   const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -171,6 +172,7 @@ function ProfilePage() {
   const handleSaveEdit = async () => {
     if (!editName.trim() || !userProfile) return;
     setSaving(true);
+    setEditError(null);
 
     try {
       const updated: UserProfile = {
@@ -189,7 +191,7 @@ function ProfilePage() {
       setUserProfile(updated);
       setEditing(false);
     } catch (e: any) {
-      alert("Failed to save profile: " + (e.message || "Unknown error"));
+      setEditError("Failed to save profile: " + (e.message || "Unknown error"));
     } finally {
       setSaving(false);
     }
@@ -283,10 +285,15 @@ function ProfilePage() {
                         <Button size="sm" onClick={handleSaveEdit} disabled={saving || !editName.trim()}>
                           {saving ? "Saving..." : "Save Profile"}
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+                        <Button size="sm" variant="outline" onClick={() => { setEditing(false); setEditError(null); }}>
                           Cancel
                         </Button>
                       </div>
+                      {editError && (
+                        <div className="text-sm p-3 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                          {editError}
+                        </div>
+                      )}
                     </div>
                   )}
                   {!editing && isOwnProfile && userProfile && (

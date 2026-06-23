@@ -1,5 +1,5 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "qually-frontend",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@noble/hashes": "^1.5.0",
     "@mysten/dapp-kit": "^1.0.6",
     "@mysten/sui": "^2.17.0",
     "@radix-ui/react-accordion": "^1.2.12",

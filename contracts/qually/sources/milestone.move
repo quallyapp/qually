@@ -1,10 +1,10 @@
 module qually::milestone {
     use sui::clock::Clock;
+    use qually::bounty::{Self, Bounty};
 
     /// Error codes
     const E_UNAUTHORIZED: u64 = 0;
     const E_INVALID_STATE: u64 = 1;
-    const E_DEADLINE_NOT_REACHED: u64 = 2;
     const E_NOT_OVERDUE: u64 = 3;
 
     /// Milestone states
@@ -74,10 +74,11 @@ module qually::milestone {
     /// Poster approves milestone
     public fun approve_milestone(
         milestone: &mut Milestone,
+        bounty: &Bounty,
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        // Note: In production, verify caller is bounty poster via cross-module call
+        assert!(ctx.sender() == bounty::poster(bounty), E_UNAUTHORIZED);
         assert!(milestone.state == STATE_SUBMITTED, E_INVALID_STATE);
 
         milestone.state = STATE_APPROVED;
@@ -87,7 +88,7 @@ module qually::milestone {
     /// Poster rejects milestone (allows resubmission)
     public fun reject_milestone(
         milestone: &mut Milestone,
-        ctx: &mut TxContext
+        _ctx: &mut TxContext
     ) {
         assert!(milestone.state == STATE_SUBMITTED, E_INVALID_STATE);
 
@@ -99,7 +100,7 @@ module qually::milestone {
     public fun escalate_overdue(
         milestone: &mut Milestone,
         clock: &Clock,
-        ctx: &mut TxContext
+        _ctx: &mut TxContext
     ) {
         assert!(milestone.state == STATE_PENDING || milestone.state == STATE_SUBMITTED, E_INVALID_STATE);
         assert!(clock.timestamp_ms() > milestone.deadline, E_NOT_OVERDUE);

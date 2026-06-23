@@ -1,4 +1,4 @@
-export const TATUM_API_KEY = "t-6a199d1236e87595baf39056-f0739496094940579ae1954a";
+export const TATUM_API_KEY = import.meta.env.VITE_TATUM_API_KEY || "";
 
 export const SUI_RPC_URL = "https://sui-testnet.gateway.tatum.io";
 export const SUI_RPC_URL_MAINNET = "https://sui-mainnet.gateway.tatum.io";

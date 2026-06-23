@@ -65,7 +65,7 @@ export function PosterActions({ bounty }: PosterActionsProps) {
 
   const handleApproveJudge = async (app: JudgeApplication) => {
     setMessage(null);
-    const result = await approveJudge(app.applicationId);
+    const result = await approveJudge(app.applicationId, bounty.id);
     if (result.success) {
       updateApplicationState(app.applicationId, 'approved');
       setApplications(prev => prev.map(a =>

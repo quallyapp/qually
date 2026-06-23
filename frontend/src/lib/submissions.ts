@@ -47,7 +47,6 @@ export async function saveSubmission(sub: SubmissionRecord): Promise<void> {
     const index = getWalrusIndex();
     index[sub.id] = result.blobId;
     saveWalrusIndex(index);
-    console.log(`[Qually] Submission metadata stored on Walrus: ${result.blobId.slice(0, 16)}...`);
   } catch (e) {
     console.warn("[Qually] Walrus upload failed, using localStorage only:", e);
   }

@@ -168,16 +168,12 @@ function BountySubmit() {
     setSubmitting(true);
     setError(null);
     setSuccess(null);
-    console.log("[Qually] Submit handler started");
 
     try {
-      console.log("[Qually] Submit: uploading description to Walrus...");
       const descResult = await Promise.race([
         uploadText(JSON.stringify({ title, description })),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Walrus upload timed out after 20s")), 20000)),
       ]);
-      console.log("[Qually] Submit: Walrus done, blobId:", descResult.blobId.slice(0, 16));
-
       let collabAddresses: string[] = [];
       let splitValues: number[] = [];
 
@@ -187,7 +183,6 @@ function BountySubmit() {
       }
 
       const blobIdNums = Array.from(new TextEncoder().encode(descResult.blobId));
-      console.log("[Qually] Submit: calling submitWork on-chain...");
       const result = await submitWork(
         id,
         collabAddresses,
@@ -196,7 +191,6 @@ function BountySubmit() {
         descResult.blobHash
       );
 
-      console.log("[Qually] Submit: result:", JSON.stringify(result, null, 2));
       if (result.success) {
         await saveSubmission({
           id: result.createdObjects?.[0] ?? `sub_${Date.now()}`,
@@ -215,12 +209,10 @@ function BountySubmit() {
           navigate({ to: "/bounty/$id", params: { id } });
         }, 3000);
       } else {
-        console.error("[Qually] Submit: error detail:", result.error);
         setError(result.error ?? "Transaction failed");
         toast.error("Submission failed", { description: result.error });
       }
     } catch (e: any) {
-      console.error("[Qually] Submit failed:", e);
       const msg = e?.message ?? "An unexpected error occurred";
       setError(msg);
       toast.error("Submission failed", { description: msg });

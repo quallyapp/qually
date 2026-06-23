@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Lock, EyeOff, Box, RefreshCw, ArrowRight, Droplet, Cloud, FileText, Plus, ArrowLeftRight } from "lucide-react";
+import { Lock, EyeOff, Box, RefreshCw, ArrowRight, Droplet, Cloud, FileText, Plus } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useOnChainBounties } from "../hooks/useOnChainBounties";
@@ -108,11 +108,11 @@ function Landing() {
             <div className="md:col-span-2 rounded-xl border border-border bg-card p-6 flex gap-6">
               <div>
                 <div className="size-10 rounded-md bg-primary/10 grid place-items-center text-primary border border-primary/20"><RefreshCw className="size-5" /></div>
-                <h3 className="font-semibold mt-4 text-lg">Multi-token Payouts</h3>
-                <p className="text-sm text-on-surface-variant mt-2 max-w-md">Powered by LI.FI integration. Pay out in any major stablecoin or native asset, across bridges, with single-click settlement logic.</p>
+                <h3 className="font-semibold mt-4 text-lg">Recurring Bounties</h3>
+                <p className="text-sm text-on-surface-variant mt-2 max-w-md">Auto-extend deadlines and set up recurring bounty cycles. Keep your pipeline of technical work flowing without manual re-posting.</p>
               </div>
               <div className="ml-auto flex-shrink-0 size-32 rounded-md border-2 border-dashed border-border grid place-items-center bg-surface-low">
-                <ArrowLeftRight className="size-7 text-primary/60" />
+                <RefreshCw className="size-7 text-primary/60" />
               </div>
             </div>
           </div>

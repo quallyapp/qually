@@ -184,7 +184,7 @@ export function DisputePanel({ bountyId, posterAddress, dispute }: DisputePanelP
                     />
                     <Button
                       size="sm"
-                      onClick={() => handleAction(() => assignArbiter(dispute.id, arbiterAddress), 'Arbiter assigned')}
+                      onClick={() => handleAction(() => assignArbiter(dispute.id, bountyId, arbiterAddress), 'Arbiter assigned')}
                       disabled={pending || !arbiterAddress}
                     >
                       {pending ? <Loader2 className="size-4 animate-spin" /> : <Shield className="size-4" />}

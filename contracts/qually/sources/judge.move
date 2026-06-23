@@ -2,6 +2,7 @@ module qually::judge {
     use sui::balance::{Self, Balance};
     use sui::sui::SUI;
     use sui::coin::{Self};
+    use qually::bounty::{Self, Bounty};
 
     /// Error codes
     const E_UNAUTHORIZED: u64 = 0;
@@ -113,8 +114,10 @@ module qually::judge {
     /// Poster approves a judge application
     public fun approve_judge(
         application: &mut JudgeApplication,
+        bounty: &Bounty,
         ctx: &mut TxContext
     ) {
+        assert!(ctx.sender() == bounty::poster(bounty), E_UNAUTHORIZED);
         assert!(application.state == APP_PENDING, E_INVALID_STATE);
         application.state = APP_APPROVED;
     }

@@ -136,7 +136,7 @@ export function MilestoneActions({ bountyId, posterAddress, milestones = [] }: M
                   <>
                     <Button
                       size="sm"
-                      onClick={() => handleAction(() => approveMilestone(milestone.id), 'Milestone approved')}
+                      onClick={() => handleAction(() => approveMilestone(milestone.id, bountyId), 'Milestone approved')}
                       disabled={pending}
                       className="flex-1"
                     >

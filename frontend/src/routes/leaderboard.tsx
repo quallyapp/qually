@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Trophy, Users, Gavel, Crown, Loader2 } from "lucide-react";
+import { Trophy, Users, Crown, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useOnChainBounties } from "../hooks/useOnChainBounties";
@@ -11,13 +11,12 @@ export const Route = createFileRoute("/leaderboard")({
   head: () => ({
     meta: [
       { title: "Leaderboard — Qually" },
-      { name: "description", content: "See the top hunters, posters, and judges on Qually's decentralized bounty platform." },
+      { name: "description", content: "See the top posters on Qually's decentralized bounty platform." },
     ],
   }),
   component: LeaderboardPage,
 });
 
-type Tab = "hunters" | "posters" | "judges";
 type Period = "all" | "30d" | "7d";
 
 function truncateAddress(addr: string) {
@@ -77,16 +76,9 @@ function computePosters(bounties: Bounty[], period: Period): LeaderboardEntry[] 
 
 function LeaderboardPage() {
   const { data: rawBounties = [], isLoading } = useOnChainBounties();
-  const [activeTab, setActiveTab] = useState<Tab>("hunters");
   const [activePeriod, setActivePeriod] = useState<Period>("all");
 
   const posterData = useMemo(() => computePosters(rawBounties, activePeriod), [rawBounties, activePeriod]);
-
-  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
-    { key: "hunters", label: "Hunters", icon: <Trophy className="size-4" /> },
-    { key: "posters", label: "Posters", icon: <Users className="size-4" /> },
-    { key: "judges", label: "Judges", icon: <Gavel className="size-4" /> },
-  ];
 
   const periods: { key: Period; label: string }[] = [
     { key: "all", label: "All Time" },
@@ -108,24 +100,6 @@ function LeaderboardPage() {
       </div>
 
       <div className="mx-auto max-w-[1280px] px-6 py-10">
-        {/* Tabs */}
-        <div className="flex items-center gap-1 border border-border rounded-lg bg-card p-1 w-fit mb-6">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              className={`flex items-center gap-2 h-10 px-5 rounded-md text-sm font-semibold transition ${
-                activeTab === t.key
-                  ? "bg-primary text-primary-foreground"
-                  : "text-on-surface-variant hover:text-foreground hover:bg-accent"
-              }`}
-            >
-              {t.icon}
-              {t.label}
-            </button>
-          ))}
-        </div>
-
         {/* Period filters */}
         <div className="flex items-center gap-2 mb-8">
           {periods.map((p) => (
@@ -161,23 +135,7 @@ function LeaderboardPage() {
         )}
 
         {/* Content */}
-        {!isLoading && rawBounties.length > 0 && activeTab === "hunters" && (
-          <div className="text-center py-20 text-on-surface-variant">
-            <Trophy className="size-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-semibold mb-1">Hunter rankings coming soon</p>
-            <p className="text-sm">Submission data will be tracked on-chain to rank hunters by earnings.</p>
-          </div>
-        )}
-
-        {!isLoading && rawBounties.length > 0 && activeTab === "judges" && (
-          <div className="text-center py-20 text-on-surface-variant">
-            <Gavel className="size-12 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-semibold mb-1">Judge rankings coming soon</p>
-            <p className="text-sm">Judge performance data will be available after judging is integrated.</p>
-          </div>
-        )}
-
-        {!isLoading && rawBounties.length > 0 && activeTab === "posters" && (
+        {!isLoading && rawBounties.length > 0 && (
           <div>
             {posterData.length === 0 ? (
               <div className="text-center py-20 text-on-surface-variant">

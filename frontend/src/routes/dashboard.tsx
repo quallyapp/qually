@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Wallet, Bell, Search, Scale, FileText, ArrowRight } from "lucide-react";
+import { Wallet, Bell, Search, FileText, ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useOnChainBounties, useMySubmissions } from "@/hooks/useOnChainBounties";
@@ -113,9 +113,6 @@ function DashboardPage() {
             </TabsTrigger>
             <TabsTrigger value="submissions" className="gap-2">
               <Search className="size-4" /> My Submissions
-            </TabsTrigger>
-            <TabsTrigger value="judging" className="gap-2">
-              <Scale className="size-4" /> Judging Queue
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="size-4" /> Notifications
@@ -241,23 +238,6 @@ function DashboardPage() {
                 ))}
               </div>
             )}
-          </TabsContent>
-
-          {/* Judging Queue */}
-          <TabsContent value="judging">
-            <div className="rounded-lg border border-border bg-card p-16 text-center">
-              <Scale className="size-10 mx-auto text-on-surface-variant mb-4" />
-              <h3 className="text-headline-sm mb-2">Bounties awaiting your judgment</h3>
-              <p className="text-on-surface-variant max-w-md mx-auto mb-6">
-                Apply as a judge to review submissions and earn reputation on the platform.
-              </p>
-              <Link
-                to="/judges"
-                className="inline-flex items-center justify-center h-10 px-5 rounded-md border border-border bg-surface-low text-sm font-semibold hover:border-primary/40 transition"
-              >
-                Apply as Judge <ArrowRight className="size-3 ml-1" />
-              </Link>
-            </div>
           </TabsContent>
 
           {/* Notifications */}

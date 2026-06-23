@@ -4,7 +4,6 @@ module qually::submission {
 
     /// Error codes
     const E_INVALID_SPLITS: u64 = 0;
-    const E_EMPTY_COLLABORATORS: u64 = 1;
     const E_BOUNTY_NOT_OPEN: u64 = 2;
     const E_SUBMISSION_DEADLINE_PASSED: u64 = 3;
     const E_NOT_ALLOWED: u64 = 4;
