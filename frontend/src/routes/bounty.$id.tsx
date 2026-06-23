@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, createFileRoute, useParams, Outlet, useMatchRoute } from "@tanstack/react-router";
-import { Info, Cloud, Link as LinkIcon, BadgeCheck, Lock, Send, Share2, Copy, ShieldCheck, Shield, User, ExternalLink, Loader2, Vote } from "lucide-react";
+import { Info, Cloud, Link as LinkIcon, BadgeCheck, Lock, Send, Share2, Copy, ShieldCheck, Shield, User, ExternalLink, Loader2, Vote, DollarSign, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useOnChainBounty } from "../hooks/useOnChainBounties";
 import { useWallet } from "../hooks/useWallet";
 import { PosterActions } from "../components/bounty/PosterActions";
 import { JudgeActions } from "../components/bounty/JudgeActions";
-import { getApplicationsForBounty, getJudgeDetailsForApplication, type JudgeApplication } from "../lib/judge-applications";
+import { getApplicationsForBounty, getJudgeDetailsForApplication, updateApplicationState, type JudgeApplication } from "../lib/judge-applications";
 import type { JudgeProfileDetails } from "../lib/judge-profiles";
+import { useContract } from "../hooks/useContract";
 import { getNickname } from "../lib/user-profiles";
 import { sanitizeHtml } from "../lib/utils";
 
@@ -53,8 +54,27 @@ function truncateAddress(addr: string): string {
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
 
+interface CustomTimelineEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+}
+
 interface ApplicationWithDetails extends JudgeApplication {
   judgeDetails?: JudgeProfileDetails | null;
+}
+
+function getCustomEvents(bountyId: string): CustomTimelineEvent[] {
+  try {
+    return JSON.parse(localStorage.getItem(`qually_timeline_${bountyId}`) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveCustomEvents(bountyId: string, events: CustomTimelineEvent[]) {
+  localStorage.setItem(`qually_timeline_${bountyId}`, JSON.stringify(events));
 }
 
 function SkeletonLoader() {
@@ -142,10 +162,21 @@ function BountyDetail() {
   const [activeTab, setActiveTab] = useState<"brief" | "submissions" | "timeline" | "poster" | "judges">("brief");
   const [copied, setCopied] = useState(false);
   const { address } = useWallet();
+  const { pending, approveJudge, boostPrizePool } = useContract();
   const [time, setTime] = useState({ days: "00", hours: "00", minutes: "00", seconds: "00" });
+  const [boostAmount, setBoostAmount] = useState("");
+  const [boostMsg, setBoostMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [localPrizePool, setLocalPrizePool] = useState<number | null>(null);
 
   const [applications, setApplications] = useState<ApplicationWithDetails[]>([]);
   const [loadingApps, setLoadingApps] = useState(false);
+
+  const [customEvents, setCustomEvents] = useState<CustomTimelineEvent[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formTitle, setFormTitle] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formDate, setFormDate] = useState("");
 
   useEffect(() => {
     if (!bounty) return;
@@ -172,6 +203,10 @@ function BountyDetail() {
       setLoadingApps(false);
     }
     loadApps();
+  }, [id]);
+
+  useEffect(() => {
+    setCustomEvents(getCustomEvents(id));
   }, [id]);
 
   if (isChildRoute) {
@@ -204,6 +239,101 @@ function BountyDetail() {
     }
   }
 
+  async function handleApproveJudge(app: ApplicationWithDetails) {
+    const result = await approveJudge(app.applicationId, bounty!.id);
+    if (result.success) {
+      updateApplicationState(app.applicationId, 'approved');
+      setApplications(prev => prev.map(a =>
+        a.applicationId === app.applicationId ? { ...a, state: 'approved' } : a
+      ));
+    }
+  }
+
+  function handleRejectJudge(app: ApplicationWithDetails) {
+    updateApplicationState(app.applicationId, 'rejected');
+    setApplications(prev => prev.map(a =>
+      a.applicationId === app.applicationId ? { ...a, state: 'rejected' } : a
+    ));
+  }
+
+  function resetForm() {
+    setFormTitle("");
+    setFormDescription("");
+    setFormDate("");
+    setEditingId(null);
+    setShowAddForm(false);
+  }
+
+  function handleSaveEvent() {
+    if (!formTitle.trim() || !formDate) return;
+    const newEvent: CustomTimelineEvent = {
+      id: editingId || crypto.randomUUID(),
+      title: formTitle.trim(),
+      description: formDescription.trim(),
+      date: formDate,
+    };
+    let updated: CustomTimelineEvent[];
+    if (editingId) {
+      updated = customEvents.map(e => e.id === editingId ? newEvent : e);
+    } else {
+      updated = [...customEvents, newEvent];
+    }
+    saveCustomEvents(id, updated);
+    setCustomEvents(updated);
+    resetForm();
+  }
+
+  function handleEditEvent(event: CustomTimelineEvent) {
+    setEditingId(event.id);
+    setFormTitle(event.title);
+    setFormDescription(event.description);
+    setFormDate(event.date);
+    setShowAddForm(true);
+  }
+
+  function handleDeleteEvent(eventId: string) {
+    const updated = customEvents.filter(e => e.id !== eventId);
+    saveCustomEvents(id, updated);
+    setCustomEvents(updated);
+  }
+
+  function getEventStatus(dateStr: string): "done" | "current" | "upcoming" {
+    const eventDate = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDay = new Date(eventDate);
+    eventDay.setHours(0, 0, 0, 0);
+    if (eventDay.getTime() < today.getTime()) return "done";
+    if (eventDay.getTime() === today.getTime()) return "current";
+    return "upcoming";
+  }
+
+  async function handleBoost() {
+    if (!boostAmount || Number(boostAmount) <= 0) return;
+    setBoostMsg(null);
+    const mist = Number(boostAmount) * 1_000_000_000;
+    const result = await boostPrizePool(bounty!.id, mist);
+    if (result.success) {
+      const added = Number(boostAmount);
+      setLocalPrizePool((prev) => (prev ?? bounty!.prizePool) + added);
+      setBoostMsg({ type: "success", text: `Boosted by ${added} SUI!` });
+      setBoostAmount("");
+      const key = `qually_boost_notifications_${bounty!.posterAddress}`;
+      try {
+        const existing: { text: string; meta: string; time: string; bountyId: string }[] = JSON.parse(localStorage.getItem(key) || "[]");
+        existing.push({
+          text: `Someone boosted "${bounty!.title}" by ${added} SUI`,
+          meta: "PRIZE POOL BOOST",
+          time: new Date().toLocaleDateString(),
+          bountyId: bounty!.id,
+        });
+        localStorage.setItem(key, JSON.stringify(existing));
+      } catch {}
+    } else {
+      setBoostMsg({ type: "error", text: result.error || "Boost failed" });
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -226,7 +356,7 @@ function BountyDetail() {
           <aside className="rounded-lg border border-border bg-card p-5 self-start">
             <div className="flex items-center justify-between py-2">
               <span className="text-sm text-on-surface-variant">Prize Pool</span>
-              <span className="font-mono font-bold text-primary text-xl">{formatPrizePool(bounty.prizePool)}</span>
+              <span className="font-mono font-bold text-primary text-xl">{formatPrizePool(localPrizePool ?? bounty.prizePool)}</span>
             </div>
             <div className="border-t border-border pt-3 flex items-center justify-between">
               <span className="text-sm text-on-surface-variant">Time Remaining</span>
@@ -246,6 +376,38 @@ function BountyDetail() {
                 </div>
               )}
             </div>
+
+            {/* Boost Prize Pool — visible to any connected wallet */}
+            {address && bounty.status === "open" && (
+              <div className="border-t border-border pt-3 mt-3 space-y-2">
+                <p className="text-sm font-semibold flex items-center gap-1.5">
+                  <DollarSign className="size-4 text-primary" /> Boost Prize Pool
+                </p>
+                {boostMsg && (
+                  <div className={`text-xs px-2 py-1.5 rounded ${boostMsg.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+                    {boostMsg.text}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    placeholder="SUI amount"
+                    value={boostAmount}
+                    onChange={(e) => setBoostAmount(e.target.value)}
+                    className="flex-1 h-9 rounded-md border border-border bg-card px-3 text-sm font-mono placeholder:text-on-surface-variant/50"
+                  />
+                  <button
+                    onClick={handleBoost}
+                    disabled={pending || !boostAmount || Number(boostAmount) <= 0}
+                    className="h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
+                  >
+                    {pending ? <Loader2 className="size-3.5 animate-spin" /> : <DollarSign className="size-3.5" />} Boost
+                  </button>
+                </div>
+              </div>
+            )}
           </aside>
         </div>
       </section>
@@ -329,10 +491,63 @@ function BountyDetail() {
             {/* ── Timeline Tab ── */}
             {activeTab === "timeline" && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-headline-md mb-2">Bounty Timeline</h2>
-                  <p className="text-sm text-on-surface-variant">Key dates and deadlines for this bounty.</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-headline-md mb-2">Bounty Timeline</h2>
+                    <p className="text-sm text-on-surface-variant">Key dates and deadlines for this bounty.</p>
+                  </div>
+                  {isPoster && !showAddForm && (
+                    <button
+                      onClick={() => { resetForm(); setShowAddForm(true); }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90"
+                    >
+                      <Plus className="size-3.5" /> Add Milestone
+                    </button>
+                  )}
                 </div>
+
+                {isPoster && showAddForm && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                    <h3 className="font-semibold text-sm">{editingId ? "Edit Milestone" : "Add Milestone"}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={formTitle}
+                        onChange={e => setFormTitle(e.target.value)}
+                        className="px-3 py-2 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                      <input
+                        type="datetime-local"
+                        value={formDate}
+                        onChange={e => setFormDate(e.target.value)}
+                        className="px-3 py-2 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Description (optional)"
+                      value={formDescription}
+                      onChange={e => setFormDescription(e.target.value)}
+                      className="w-full px-3 py-2 rounded-md border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveEvent}
+                        disabled={!formTitle.trim() || !formDate}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+                      >
+                        <Check className="size-3" /> {editingId ? "Update" : "Save"}
+                      </button>
+                      <button
+                        onClick={resetForm}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border text-xs font-semibold hover:bg-surface-container"
+                      >
+                        <X className="size-3" /> Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="relative">
                   {/* Vertical line */}
@@ -354,6 +569,23 @@ function BountyDetail() {
                       description="Hunters can submit work"
                       status="done"
                     />
+
+                    {/* Custom poster-created events */}
+                    {customEvents
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .map((event) => (
+                        <TimelineItem
+                          key={event.id}
+                          label={event.title}
+                          date={new Date(event.date)}
+                          description={event.description}
+                          status={getEventStatus(event.date)}
+                          isPoster={isPoster}
+                          onEdit={() => handleEditEvent(event)}
+                          onDelete={() => handleDeleteEvent(event.id)}
+                        />
+                      ))
+                    }
 
                     {/* Submission Deadline */}
                     <TimelineItem
@@ -504,6 +736,25 @@ function BountyDetail() {
                             <p className="text-xs text-on-surface-variant italic">No off-chain credentials stored.</p>
                           </div>
                         )}
+
+                        {isPoster && app.state === 'pending' && (
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={() => handleApproveJudge(app)}
+                              disabled={pending}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+                            >
+                              {pending ? <Loader2 className="size-3 animate-spin" /> : <ShieldCheck className="size-3" />} Approve
+                            </button>
+                            <button
+                              onClick={() => handleRejectJudge(app)}
+                              disabled={pending}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
+                            >
+                              <Shield className="size-3" /> Reject
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -563,20 +814,38 @@ function BountyDetail() {
   );
 }
 
-function TimelineItem({ label, date, description, status }: { label: string; date: Date; description: string; status: "done" | "current" | "upcoming" }) {
+function TimelineItem({ label, date, description, status, isPoster, onEdit, onDelete }: { label: string; date: Date; description: string; status: "done" | "current" | "upcoming"; isPoster?: boolean; onEdit?: () => void; onDelete?: () => void }) {
   const color = status === "done" ? "bg-primary" : status === "current" ? "bg-yellow-500" : "bg-surface-container";
   const textColor = status === "done" ? "text-primary" : status === "current" ? "text-yellow-500" : "text-on-surface-variant";
   const dotRing = status === "current" ? "ring-4 ring-yellow-500/20" : "";
 
   return (
-    <div className="relative pl-12">
+    <div className="relative pl-12 group">
       <div className={`absolute left-3.5 size-3 rounded-full ${color} ${dotRing}`} />
-      <div>
-        <p className={`font-semibold text-sm ${textColor}`}>{label}</p>
-        <p className="text-xs text-on-surface-variant mt-0.5">{description}</p>
-        <p className="text-xs text-on-surface-variant mt-1 font-mono">
-          {date.toLocaleDateString()} {date.toLocaleTimeString()}
-        </p>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className={`font-semibold text-sm ${textColor}`}>{label}</p>
+          <p className="text-xs text-on-surface-variant mt-0.5">{description}</p>
+          <p className="text-xs text-on-surface-variant mt-1 font-mono">
+            {date.toLocaleDateString()} {date.toLocaleTimeString()}
+          </p>
+        </div>
+        {isPoster && onEdit && onDelete && (
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={onEdit}
+              className="size-6 rounded border border-border grid place-items-center hover:border-primary/40 hover:bg-primary/5"
+            >
+              <Pencil className="size-3" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="size-6 rounded border border-border grid place-items-center hover:border-destructive/40 hover:bg-destructive/5"
+            >
+              <Trash2 className="size-3" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

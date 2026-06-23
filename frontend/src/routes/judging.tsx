@@ -124,7 +124,7 @@ function JudgingQueuePage() {
                         </Badge>
                         <Badge variant="outline" className="text-[10px]">{bounty.type.toUpperCase()}</Badge>
                       </div>
-                      <h3 className="font-semibold text-lg truncate">{bounty.title || "Untitled Bounty"}</h3>
+                      <h3 className="font-semibold text-lg truncate">{bounty.title || `Bounty #${bounty.id.slice(2, 6)}`}</h3>
                       <p className="text-sm text-on-surface-variant mt-1 line-clamp-2">
                         {stripHtml(bounty.description || "No description available.")}
                       </p>

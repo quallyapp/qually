@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Send, Upload, X, Users, ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
@@ -118,14 +118,34 @@ function BountySubmit() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [requiredFieldValues, setRequiredFieldValues] = useState<Record<string, string>>({});
+
+  const requiredFields = bounty?.requiredFields ?? [];
+
+  useEffect(() => {
+    if (bounty?.requiredFields) {
+      setRequiredFieldValues((prev) => {
+        const next = { ...prev };
+        for (const field of bounty.requiredFields!) {
+          if (!(field in next)) next[field] = "";
+        }
+        return next;
+      });
+    }
+  }, [bounty?.requiredFields]);
 
   if (!connected) return <NotConnected />;
   if (isLoading) return <SkeletonLoader />;
   if (!bounty) return <NotFound />;
 
+  const allRequiredFieldsFilled =
+    requiredFields.length === 0 ||
+    requiredFields.every((f) => (requiredFieldValues[f] ?? "").trim().length > 0);
+
   const isFormValid =
     title.trim().length > 0 &&
     description.trim().length > 0 &&
+    allRequiredFieldsFilled &&
     (!isTeam || validateSplits(collabs));
 
   function validateSplits(entries: CollabEntry[]): boolean {
@@ -164,6 +184,10 @@ function BountySubmit() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  function handleRequiredFieldChange(field: string, value: string) {
+    setRequiredFieldValues((prev) => ({ ...prev, [field]: value }));
+  }
+
   async function handleSubmit() {
     setSubmitting(true);
     setError(null);
@@ -171,7 +195,11 @@ function BountySubmit() {
 
     try {
       const descResult = await Promise.race([
-        uploadText(JSON.stringify({ title, description })),
+        uploadText(JSON.stringify({
+          title,
+          description,
+          ...(requiredFields.length > 0 ? { requiredFieldValues } : {}),
+        })),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Walrus upload timed out after 20s")), 20000)),
       ]);
       let collabAddresses: string[] = [];
@@ -199,6 +227,7 @@ function BountySubmit() {
           description,
           blobId: descResult.blobId,
           submittedAt: new Date().toISOString(),
+          ...(requiredFields.length > 0 ? { requiredFieldValues } : {}),
         });
 
         setSuccess(result.digest ?? "Transaction submitted");
@@ -355,6 +384,32 @@ function BountySubmit() {
                 )}
               </div>
             </div>
+
+            {/* Required Fields */}
+            {requiredFields.length > 0 && (
+              <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+                <div>
+                  <h3 className="text-sm font-semibold">Required Deliverables</h3>
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    The bounty poster requires these fields for your submission.
+                  </p>
+                </div>
+                {requiredFields.map((field) => (
+                  <div key={field} className="space-y-2">
+                    <Label htmlFor={`req-${field}`}>
+                      {field} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id={`req-${field}`}
+                      type="url"
+                      placeholder={`Enter ${field.toLowerCase()} URL`}
+                      value={requiredFieldValues[field] ?? ""}
+                      onChange={(e) => handleRequiredFieldChange(field, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Team submission */}
             <div className="rounded-lg border border-border bg-card p-5 space-y-4">

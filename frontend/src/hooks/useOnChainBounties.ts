@@ -48,7 +48,7 @@ function blobIdBytesToString(bytes: number[]): string {
   return new TextDecoder().decode(new Uint8Array(bytes));
 }
 
-async function fetchBriefFromWalrus(blobIdBytes: number[]): Promise<{ title: string; description: string; category?: string }> {
+async function fetchBriefFromWalrus(blobIdBytes: number[]): Promise<{ title: string; description: string; category?: string; requiredFields?: string[] }> {
   try {
     const blobId = blobIdBytesToString(blobIdBytes);
     if (!blobId || blobId.trim().length === 0) {
@@ -65,6 +65,7 @@ async function fetchBriefFromWalrus(blobIdBytes: number[]): Promise<{ title: str
         title: json.title || '',
         description: json.description || '',
         category: json.category,
+        requiredFields: Array.isArray(json.requiredFields) ? json.requiredFields : undefined,
       };
     } catch {
       return { title: text.slice(0, 100), description: text };
@@ -87,7 +88,7 @@ async function parseBountyObject(obj: any): Promise<Bounty | null> {
 
     return {
       id: obj.data.objectId,
-      title: brief.title || `Bounty ${obj.data.objectId.slice(0, 8)}...`,
+      title: brief.title || `Bounty #${obj.data.objectId.slice(2, 6)}`,
       type: BOUNTY_TYPE_MAP[bountyType] || 'fixed',
       status: BOUNTY_STATE_MAP[state] || 'open',
       prizePool: Number(fields.prize_pool ?? 0) / 1_000_000_000,
@@ -102,6 +103,7 @@ async function parseBountyObject(obj: any): Promise<Bounty | null> {
       splits: fields.contest_splits?.map((s: any) => Number(s)) || [100],
       createdAt: new Date(),
       submittedAddresses: fields.submitted_addresses ?? [],
+      requiredFields: brief.requiredFields,
     };
   } catch {
     return null;

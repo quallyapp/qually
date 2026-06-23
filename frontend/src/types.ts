@@ -15,4 +15,5 @@ export interface Bounty {
   splits: number[];
   createdAt: Date;
   submittedAddresses: string[];
+  requiredFields?: string[];
 }
