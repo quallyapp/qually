@@ -16,7 +16,7 @@ async function suiRequest(method: string, params: any[], retries = 3): Promise<a
     });
     if (resp.status === 429) {
       const wait = (attempt + 1) * 2000;
-      console.warn(`[Qually] Rate limited (429), retrying in ${wait}ms...`);
+
       await new Promise(r => setTimeout(r, wait));
       continue;
     }
@@ -133,7 +133,7 @@ export function useOnChainBounties() {
             }
           }
         } catch (e) {
-          console.warn('[Qually] Failed to read on-chain BountyRegistry:', e);
+
         }
 
         // 1. Load from Walrus bounty registry (persistent across browser clears)
@@ -186,7 +186,7 @@ export function useOnChainBounties() {
             if (parsed?.bounty_id) allIds.add(parsed.bounty_id);
           }
         } catch (e) {
-          console.warn('[Qually] Event query failed:', e);
+
         }
 
         // 5. Fetch each bounty object
@@ -200,13 +200,13 @@ export function useOnChainBounties() {
             // Filter out stale bounties from old package deployments
             const objType = obj.data?.type || obj.data?.content?.type || '';
             if (!objType.includes(QUALLY_PACKAGE_ID)) {
-              console.warn(`[Qually] Skipping stale bounty ${id.slice(0, 12)} (old package)`);
+
               continue;
             }
             const bounty = await parseBountyObject(obj);
             if (bounty) bounties.push(bounty);
           } catch (e) {
-            console.warn(`[Qually] Failed to fetch bounty ${id}:`, e);
+
           }
         }
 
@@ -234,7 +234,7 @@ export function useOnChainBounty(id: string | null) {
         // Filter out stale bounties from old package deployments
         const objType = obj.data?.type || obj.data?.content?.type || '';
         if (!objType.includes(QUALLY_PACKAGE_ID)) {
-          console.warn(`[Qually] Bounty ${id.slice(0, 12)} is from old package, skipping`);
+
           return null;
         }
         return await parseBountyObject(obj);

@@ -134,9 +134,7 @@ function JudgesPage() {
       let blobId = "";
       try {
         blobId = await uploadJudgeProfile(details);
-      } catch (walrusErr) {
-        console.warn("Walrus upload failed, minting without off-chain profile:", walrusErr);
-      }
+      } catch {}
 
       const result = await mintJudgeProfile();
       if (result.success) {

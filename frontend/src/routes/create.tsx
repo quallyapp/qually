@@ -197,9 +197,7 @@ function CreateBountyPage() {
 
           // Register bounty on Walrus for persistence
           for (const objId of result.createdObjects) {
-            addBountyToRegistry(objId, address!).catch((e) =>
-              console.warn("[Qually] Failed to register bounty on Walrus:", e),
-            );
+            addBountyToRegistry(objId, address!).catch(() => {});
           }
         }
         queryClient.invalidateQueries({ queryKey: ["onChainBounties"] });

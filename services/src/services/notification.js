@@ -129,7 +129,6 @@ class NotificationService {
       await this.sendEmail(userId, notification);
     }
 
-    // TODO: Add other channels (SMS, push, etc.)
   }
 
   /**

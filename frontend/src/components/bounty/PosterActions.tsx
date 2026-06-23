@@ -45,7 +45,7 @@ export function PosterActions({ bounty }: PosterActionsProps) {
         );
         setApplications(withDetails);
       } catch (e) {
-        console.warn("Failed to load judge applications:", e);
+
       } finally {
         setLoadingApps(false);
       }

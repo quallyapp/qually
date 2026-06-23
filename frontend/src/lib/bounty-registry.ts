@@ -50,7 +50,7 @@ export async function addBountyToRegistry(bountyId: string, posterAddress: strin
     localIndex[key] = result.blobId;
     saveLocalIndex(localIndex);
   } catch (e) {
-    console.warn("[Qually] Failed to upload bounty registry to Walrus:", e);
+
   }
 }
 

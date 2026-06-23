@@ -48,7 +48,7 @@ export async function saveSubmission(sub: SubmissionRecord): Promise<void> {
     index[sub.id] = result.blobId;
     saveWalrusIndex(index);
   } catch (e) {
-    console.warn("[Qually] Walrus upload failed, using localStorage only:", e);
+
   }
 }
 
