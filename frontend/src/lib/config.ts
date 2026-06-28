@@ -5,11 +5,13 @@ export const SUI_RPC_URL_MAINNET = "https://sui-mainnet.gateway.tatum.io";
 
 export const WALRUS_PUBLISHERS = [
   "https://publisher.walrus-testnet.walrus.space",
+  "https://walrus-publisher-testnet.overclock.run",
   "https://walrus-testnet-publisher.staketab.org",
 ];
 
 export const WALRUS_AGGREGATORS = [
   "https://aggregator.walrus-testnet.walrus.space",
+  "https://walrus-aggregator-testnet.overclock.run",
   "https://walrus-testnet-aggregator.staketab.org",
 ];
 
