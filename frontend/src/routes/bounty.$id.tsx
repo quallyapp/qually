@@ -353,7 +353,7 @@ function BountyDetail() {
             <h1 className="text-display">{bounty.title}</h1>
             <p className="mt-3 text-on-surface-variant max-w-2xl" dangerouslySetInnerHTML={{ __html: sanitizeHtml(bounty.description) || "No description available." }} />
           </div>
-          <aside className="rounded-lg border border-border bg-card p-5 self-start">
+          <aside className="rounded-lg border border-border bg-card p-5 self-start overflow-hidden">
             <div className="flex items-center justify-between py-2">
               <span className="text-sm text-on-surface-variant">Prize Pool</span>
               <span className="font-mono font-bold text-primary text-xl">{formatPrizePool(localPrizePool ?? bounty.prizePool)}</span>

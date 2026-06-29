@@ -20,9 +20,8 @@ export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-function formatSui(mist: number) {
-  const formatted = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(mist);
-  return `${formatted} SUI`;
+function formatSui(amount: number) {
+  return `${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })} SUI`;
 }
 
 function truncAddr(addr: string) {
