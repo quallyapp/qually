@@ -54,6 +54,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "The decentralized engine for Sui development. Solve problems, earn SUI, build the future." },
     ],
     links: [
+      { rel: "icon", href: "/logo.png", type: "image/png" },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

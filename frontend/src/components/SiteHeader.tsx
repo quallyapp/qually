@@ -28,9 +28,7 @@ export function SiteHeader({ showSearch = false }: { showSearch?: boolean }) {
     <header className="border-b border-border bg-background/80 backdrop-blur sticky top-0 z-40">
       <div className="mx-auto max-w-[1280px] px-6 h-16 flex items-center gap-8">
         <Link to="/" className="flex items-center gap-2">
-          <div className="size-8 rounded-md bg-primary/10 grid place-items-center border border-primary/20">
-            <div className="size-3 rounded-sm bg-primary rotate-45" />
-          </div>
+          <img src="/logo.png" alt="Qually" className="size-8 rounded-md object-contain" />
           <span className="font-semibold text-lg tracking-tight">Qually</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm">
