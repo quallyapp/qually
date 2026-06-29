@@ -21,9 +21,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
       <footer className="border-t border-border mt-20">
         <div className="mx-auto max-w-[1280px] px-6 py-6 flex flex-wrap items-center gap-4 justify-between text-sm text-on-surface-variant">
           <div className="flex items-center gap-2">
-            <div className="size-6 rounded bg-primary/10 grid place-items-center border border-primary/20">
-              <div className="size-2 rounded-sm bg-primary rotate-45" />
-            </div>
+            <img src="/logo.png" alt="Qually" className="size-8 rounded-md object-contain" />
             <span>Qually</span>
             <span className="text-on-surface-variant/70">© 2026 Qually. Built on Sui.</span>
           </div>
@@ -42,9 +40,7 @@ export function SiteFooter({ compact = false }: { compact?: boolean }) {
       <div className="mx-auto max-w-[1280px] px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1">
           <div className="flex items-center gap-2 mb-4">
-            <div className="size-8 rounded-md bg-primary/10 grid place-items-center border border-primary/20">
-              <div className="size-3 rounded-sm bg-primary rotate-45" />
-            </div>
+            <img src="/logo.png" alt="Qually" className="size-10 rounded-md object-contain" />
           </div>
           <p className="text-sm text-on-surface-variant max-w-xs">
             The foundational layer for technical work on the Sui Network. Precision engineered for high-stakes contributions.

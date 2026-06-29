@@ -3,6 +3,7 @@ import { Lock, EyeOff, Box, RefreshCw, ArrowRight, Droplet, Cloud, FileText, Plu
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useOnChainBounties } from "../hooks/useOnChainBounties";
+import { stripHtml } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,7 +27,6 @@ function Landing() {
       <section className="relative grid-bg-lg border-b border-border">
         <div className="mx-auto max-w-[1280px] px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <img src="/logo.png" alt="Qually" className="size-16 rounded-lg mb-4 object-contain" />
             <span className="inline-block text-label-mono px-3 py-1 rounded-sm bg-primary/10 text-primary border border-primary/20">
               BUILD ON SUI INFRASTRUCTURE
             </span>
@@ -71,7 +71,7 @@ function Landing() {
                     <span className="text-label-mono px-2.5 py-1 rounded-sm bg-primary/10 text-primary border border-primary/20 uppercase">{heroBounty.status}</span>
                   </div>
                   <div className="space-y-2 my-5">
-                    <p className="text-sm text-on-surface-variant line-clamp-2">{heroBounty.description || "No description provided."}</p>
+                    <p className="text-sm text-on-surface-variant line-clamp-2">{stripHtml(heroBounty.description || "No description provided.")}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-md border border-border bg-surface-low p-3">
