@@ -217,9 +217,10 @@ function BountyDetail() {
   if (!bounty) return <NotFound />;
 
   const isPoster = address === bounty.posterAddress;
+  const submissionsLocked = bounty.submissionDeadline.getTime() > Date.now();
   const tabs = [
     { key: "brief" as const, label: "Brief", lock: false },
-    { key: "submissions" as const, label: "Submissions", lock: true },
+    { key: "submissions" as const, label: `Submissions (${bounty.submissionCount})`, lock: submissionsLocked },
     { key: "timeline" as const, label: "Timeline", lock: false },
     ...(isPoster ? [{ key: "poster" as const, label: "Poster Actions", lock: false }] : []),
     { key: "judges" as const, label: `Judges (${applications.length})`, lock: false },
@@ -481,10 +482,49 @@ function BountyDetail() {
 
             {/* ── Submissions Tab ── */}
             {activeTab === "submissions" && (
-              <div className="py-16 text-center space-y-4">
-                <Lock className="size-10 text-on-surface-variant mx-auto" />
-                <h2 className="text-headline-md">Submissions are sealed</h2>
-                <p className="text-on-surface-variant max-w-md mx-auto">Submissions are sealed until judging begins. Check back after the submission deadline.</p>
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-headline-md mb-2">Submissions</h2>
+                  <p className="text-sm text-on-surface-variant">
+                    {bounty.submissionDeadline.getTime() > Date.now()
+                      ? "Submissions are sealed until the submission deadline passes."
+                      : `${bounty.submissionCount} submission${bounty.submissionCount !== 1 ? "s" : ""} received.`
+                    }
+                  </p>
+                </div>
+
+                {bounty.submissionDeadline.getTime() > Date.now() ? (
+                  <div className="py-16 text-center space-y-4">
+                    <Lock className="size-10 text-on-surface-variant mx-auto" />
+                    <h2 className="text-headline-md">Submissions are sealed</h2>
+                    <p className="text-on-surface-variant max-w-md mx-auto">
+                      Submissions are sealed until the deadline: {bounty.submissionDeadline.toLocaleDateString()} {bounty.submissionDeadline.toLocaleTimeString()}
+                    </p>
+                  </div>
+                ) : bounty.submissionCount === 0 ? (
+                  <div className="py-16 text-center space-y-4">
+                    <FileText className="size-10 text-on-surface-variant mx-auto" />
+                    <h2 className="text-headline-md">No submissions</h2>
+                    <p className="text-on-surface-variant max-w-md mx-auto">No work was submitted for this bounty.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {bounty.submittedAddresses?.map((addr: string, i: number) => (
+                      <div key={addr} className="rounded-lg border border-border bg-surface-low p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="size-10 rounded-md bg-primary/10 border border-primary/20 grid place-items-center text-primary font-mono font-bold text-xs">
+                            {addr.slice(2, 4).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{addr.slice(0, 6)}...{addr.slice(-4)}</p>
+                            <p className="text-xs text-on-surface-variant">Submission #{i + 1}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline">Submitted</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
