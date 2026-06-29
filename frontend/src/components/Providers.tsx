@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import { WalletProvider, SuiClientProvider, useCurrentAccount, useConnectWallet, useDisconnectWallet, useWallets, useSuiClient, useSignTransaction, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { WalletProvider, SuiClientProvider, ConnectModal, useCurrentAccount, useConnectWallet, useDisconnectWallet, useWallets, useSuiClient, useSignTransaction, useSignAndExecuteTransaction } from "@mysten/dapp-kit";
 import { Toaster } from "@/components/ui/sonner";
 import { WalletContext, type WalletState } from "@/hooks/useWallet";
 import { SUI_RPC_URL } from "@/lib/config";
+import "@mysten/dapp-kit/dist/index.css";
 
 interface DappKitState {
   account: ReturnType<typeof useCurrentAccount>;
@@ -19,8 +20,6 @@ const DappKitContext = createContext<DappKitState | null>(null);
 export function useDappKit(): DappKitState {
   const ctx = useContext(DappKitContext);
   if (!ctx) {
-    // SSR-safe fallback: return stubs that won't crash during server rendering.
-    // Actual values are provided by DappKitBridge after client mount.
     return {
       account: null,
       suiClient: null as any,
@@ -55,12 +54,19 @@ function WalletStateBridge({ children }: { children: ReactNode }) {
   const wallets = useWallets();
   const { mutateAsync: connectWallet, isPending: connecting } = useConnectWallet();
   const { mutateAsync: disconnectWallet } = useDisconnectWallet();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const connect = useCallback(async () => {
-    if (wallets.length > 0) {
+    if (wallets.length === 1) {
       await connectWallet({ wallet: wallets[0] });
+    } else {
+      setModalOpen(true);
     }
   }, [connectWallet, wallets]);
+
+  const showConnectModal = useCallback(() => {
+    setModalOpen(true);
+  }, []);
 
   const disconnect = useCallback(async () => {
     await disconnectWallet();
@@ -72,10 +78,16 @@ function WalletStateBridge({ children }: { children: ReactNode }) {
     connecting,
     connect,
     disconnect,
+    showConnectModal,
   };
 
   return (
     <WalletContext.Provider value={value}>
+      <ConnectModal
+        trigger={<span style={{ display: "none" }} />}
+        open={modalOpen}
+        onOpenChange={(open) => setModalOpen(open)}
+      />
       {children}
     </WalletContext.Provider>
   );
@@ -114,6 +126,7 @@ export function Providers({
           connecting: false,
           connect: async () => {},
           disconnect: async () => {},
+          showConnectModal: () => {},
         }}>
           {children}
           <Toaster />

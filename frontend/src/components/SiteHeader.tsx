@@ -82,7 +82,7 @@ function DashboardLink() {
 }
 
 function WalletButton() {
-  const { connected, address, connecting, connect, disconnect } = useWallet();
+  const { connected, address, connecting, connect, disconnect, showConnectModal } = useWallet();
   const [nickname, setNickname] = useState<string | null>(null);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ function WalletButton() {
 
   return (
     <button
-      onClick={connect}
+      onClick={showConnectModal}
       disabled={connecting}
       className="h-10 px-5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
     >

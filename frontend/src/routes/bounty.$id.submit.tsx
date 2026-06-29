@@ -49,7 +49,7 @@ function SkeletonLoader() {
 }
 
 function NotConnected() {
-  const { connect, connecting } = useWallet();
+  const { connect, connecting, showConnectModal } = useWallet();
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,7 +62,7 @@ function NotConnected() {
         <p className="text-on-surface-variant max-w-md mx-auto">
           You need to connect your wallet to submit work for this bounty.
         </p>
-        <Button onClick={connect} disabled={connecting} size="lg">
+        <Button onClick={showConnectModal} disabled={connecting} size="lg">
           {connecting ? "Connecting…" : "Connect Wallet"}
         </Button>
         <Link

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext } from 'react';
 
 interface WalletState {
   connected: boolean;
@@ -6,6 +6,7 @@ interface WalletState {
   connecting: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  showConnectModal: () => void;
 }
 
 const WalletContext = createContext<WalletState>({
@@ -14,6 +15,7 @@ const WalletContext = createContext<WalletState>({
   connecting: false,
   connect: async () => {},
   disconnect: async () => {},
+  showConnectModal: () => {},
 });
 
 export function useWallet(): WalletState {
