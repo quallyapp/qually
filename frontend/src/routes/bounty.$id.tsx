@@ -470,10 +470,6 @@ function BountyDetail() {
             {/* ── Brief Tab ── */}
             {activeTab === "brief" && (
               <>
-                <div className="flex items-start gap-3 rounded-md bg-primary/5 border border-primary/15 p-4 text-sm">
-                  <Info className="size-4 text-primary mt-0.5 flex-shrink-0" />
-                  <p className="font-mono text-primary">This document is cryptographically served from Walrus Decentralized Storage.</p>
-                </div>
                 <section>
                   <h2 className="text-headline-md mb-3">Project Overview</h2>
                   <div className="text-on-surface-variant leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(bounty.description) || "No description available." }} />
