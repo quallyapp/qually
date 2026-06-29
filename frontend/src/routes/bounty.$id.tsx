@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, createFileRoute, useParams, Outlet, useMatchRoute } from "@tanstack/react-router";
-import { Info, Cloud, Link as LinkIcon, BadgeCheck, Lock, Send, Share2, Copy, ShieldCheck, Shield, User, ExternalLink, Loader2, Vote, DollarSign, Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { Info, Cloud, Link as LinkIcon, BadgeCheck, Lock, Send, Share2, Copy, ShieldCheck, Shield, User, ExternalLink, Loader2, Vote, DollarSign, Plus, Pencil, Trash2, X, Check, FileText } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { Badge } from "@/components/ui/badge";
 import { useOnChainBounty } from "../hooks/useOnChainBounties";
 import { useWallet } from "../hooks/useWallet";
 import { PosterActions } from "../components/bounty/PosterActions";
